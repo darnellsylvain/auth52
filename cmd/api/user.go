@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/darnellsylvain/auth52/data"
+	"github.com/darnellsylvain/auth52/models"
 )
 
 
@@ -16,8 +16,7 @@ func (api *API) GetUser(w http.ResponseWriter, r *http.Request) {
 	// Access user modela and find user by the ID
 	// Return the user in JSON respon
 
-	sendJSON(w, http.StatusOK, &data.User{
-		Name:      "Alice Doe",
+	sendJSON(w, http.StatusOK, &models.User{
 		Email:     "alice@example.com",
 
 	})
