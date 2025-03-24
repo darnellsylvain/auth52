@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/darnellsylvain/auth52/data"
 )
 
 // Main user interace

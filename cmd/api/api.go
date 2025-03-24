@@ -2,26 +2,40 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/darnellsylvain/auth52/storage"
 )
 
 type API struct {
-	handler http.Handler
-	// db 
+	handler 	http.Handler
+	db 			*storage.Connection
 	// config
 	version string
 }
+
 
 func NewAPI() *API {
 	api := &API{
 		version: "1",
 	}
 
+	// Initialise DB
+	db, err := storage.Dial()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
+		os.Exit(1)
+	}
+	api.db = db
+	defer db.Shutdown()
+
+	// Initialliz Router
 	router := NewRouter()
 	router.mux.HandleFunc("/healthcheck", api.HealthCheck)
 	router.mux.HandleFunc("/user", api.GetUser)
@@ -47,9 +61,9 @@ func (api *API) ListenAndServe() {
 
 	go func() {
 		waitForTermination(l, done)
-		// Create 30 second timeout to allow any processes to complete before shutdown, defer makesure everything is cleaned up.
 		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 		defer cancel()
+		api.Shutdown(ctx)
 		server.Shutdown(ctx)
 	}()
 
@@ -79,4 +93,9 @@ func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		"name":        "Auth 52",
 		"description": "Auth 52 is a user registration and authentication API",
 	})
+}
+
+
+func (api *API) Shutdown(ctx context.Context) {
+	api.db.Close()
 }
