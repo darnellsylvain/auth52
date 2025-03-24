@@ -73,7 +73,6 @@ func (api *API) ListenAndServe() {
 	}
 }
 
-
 func waitForTermination(log *log.Logger, done <-chan struct{}) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -83,8 +82,6 @@ func waitForTermination(log *log.Logger, done <-chan struct{}) {
 
 	<-done
 	log.Println("Shutting down...")
-
-
 }
 
 func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
