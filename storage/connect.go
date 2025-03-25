@@ -13,7 +13,6 @@ type Connection struct {
 }
 
 func Dial() (*Connection, error) {
-	os.Setenv("DATABASE_URL", "postgres://auth52:password@localhost/auth52")
 	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		// Handle this better
@@ -25,6 +24,7 @@ func Dial() (*Connection, error) {
 		dbpool.Close()
 		log.Printf("db ping was not successful: %v", err)
 	}
+	log.Println("DB successfully connected")
 
 	return &Connection{dbpool}, nil
 }
