@@ -8,12 +8,13 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	Email     string    `json:"email"`
-	EncryptedPassword  []byte  	`json:"-"`
-	Activated bool      `json:"activated"`
-	Provider  string
+	ID        			uuid.UUID `json:"id"`
+	CreatedAt 			time.Time `json:"created_at"`
+	Name				string	
+	Email     			string    `json:"email"`
+	EncryptedPassword  	[]byte  	`json:"-"`
+	Activated 			bool      `json:"activated"`
+	Provider  			string
 }
 
 func NewUser(email, password string) (*User, error) {
