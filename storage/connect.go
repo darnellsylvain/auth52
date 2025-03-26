@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -13,18 +14,21 @@ type Connection struct {
 }
 
 func Dial() (*Connection, error) {
-	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	connStr := os.Getenv("AUTH52_DB_URL")
+	if connStr == "" {
+		log.Fatal("Database URL is not set")
+	}
+
+	dbpool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		// Handle this better
-		return nil, err
+		return nil, fmt.Errorf("failed to create pool: %w", err)
 	}
 
 	err = dbpool.Ping(context.Background())
 	if err != nil {
 		dbpool.Close()
-		log.Printf("db ping was not successful: %v", err)
+		return nil, fmt.Errorf("db ping failed: %w", err)
 	}
-	log.Println("DB successfully connected")
 
 	return &Connection{dbpool}, nil
 }
