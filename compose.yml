@@ -1,0 +1,35 @@
+name: auth52
+services:
+  auth52:
+    container_name: auth52
+    build: .
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres
+    container_name: auth52_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: auth52
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth52_db
+    
+  migrate:
+    container_name: auth52_migrations
+    image: kukymbr/goose-docker
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: postgres://auth52:password@auth52_db:5432/auth52_db?sslmode=disable
+    depends_on:
+      - postgres
+  
+volumes:
+  pgdata:
