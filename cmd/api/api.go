@@ -35,7 +35,7 @@ func NewAPI() *API {
 	api.db = db
 	defer db.Shutdown()
 
-	// Initialliz Router
+	// Initiallize Router
 	router := NewRouter()
 	router.mux.HandleFunc("/healthcheck", api.HealthCheck)
 	router.mux.HandleFunc("/user", api.GetUser)

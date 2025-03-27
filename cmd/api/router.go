@@ -12,7 +12,7 @@ type Router struct {
 
 func NewRouter() *Router {
 	return &Router{
-		mux: mux.NewRouter(),
+		mux: mux.NewRouter().StrictSlash(true),
 	}
 }
 
