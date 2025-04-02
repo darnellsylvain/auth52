@@ -11,7 +11,6 @@ func (api *API) RecoverPanic(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				log.Printf("panic recovered: %v", err)
 				w.Header().Set("Connection", "close")
-				w.WriteHeader(http.StatusInternalServerError)
 				sendJSON(w, http.StatusInternalServerError, err)
 			}
 		}()
