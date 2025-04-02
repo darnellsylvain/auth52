@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func sendJSON(w http.ResponseWriter, status int, data interface{}) error {
+func sendJSON(w http.ResponseWriter, status int, data any) error {
 	w.Header().Set("Content-Type", "application/json")
 	d, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
@@ -24,7 +24,7 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	decoder.DisallowUnknownFields()
 
 	err := decoder.Decode(data)
-	if err != nil {
+	if err != nil {	
 		return err
 	}
 
