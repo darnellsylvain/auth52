@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID        			uuid.UUID `json:"id"`
+	ID        			uuid.UUID `json:"-"`
 	CreatedAt 			time.Time `json:"created_at"`
-	Name				string	
+	Name				string	  `json:"name"`
 	Email     			string    `json:"email"`
-	EncryptedPassword  	[]byte  	`json:"-"`
-	Activated 			bool      `json:"activated"`
-	Provider  			string
+	EncryptedPassword  	[]byte 	  `json:"-"`
+	Activated 			bool      `json:"-"`
+	Provider  			string    `json:"-"`
 }
 
 func NewUser(email, password string) (*User, error) {
@@ -46,23 +46,4 @@ func hashPassword(plaintextPassword string) ([]byte, error) {
 	}
 
 	return hash, nil
-}
-
-
-
-var userList = []*User{
-	{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		Email:     "alice@example.com",
-		EncryptedPassword:  []byte("password"),
-		Activated: true,
-	},
-	{
-		ID:        uuid.New(),
-		CreatedAt: time.Now(),
-		Email:     "bob@example.com",
-		EncryptedPassword:  []byte("password"),
-		Activated: false,
-	},
 }
