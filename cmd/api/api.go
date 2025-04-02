@@ -39,7 +39,7 @@ func NewAPI() *API {
 	router := NewRouter()
 	router.mux.HandleFunc("/healthcheck", api.HealthCheck)
 	router.mux.HandleFunc("/user", api.GetUser)
-	router.mux.HandleFunc("/signup", api.Signup)
+	router.mux.HandleFunc("/signup", api.Signup).Methods("POST")
 
 	api.handler = router
 
@@ -51,7 +51,7 @@ func (api *API) ListenAndServe() {
 
 	server := &http.Server{
 		Addr: ":8080",
-		Handler: api.handler,
+		Handler: api.RecoverPanic(api.handler),
 		ReadTimeout: 5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout: time.Minute,
