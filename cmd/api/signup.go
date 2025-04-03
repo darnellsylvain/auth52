@@ -1,10 +1,14 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	validator "github.com/darnellsylvain/auth52/internal"
 	"github.com/darnellsylvain/auth52/models"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type SignupParams struct {
@@ -13,9 +17,8 @@ type SignupParams struct {
 }
 
 func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
-	// Get params passed in
 	params := &SignupParams{}
-	// read params/decode
+	
 	err := readJSON(w, r, params)
 	if err != nil {
 		badRequestError("Could not read signup params %v", err)
@@ -23,29 +26,61 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	v := validator.New()
-	// Do validation checks on the params passed in. Makesure email and password in right format
-	// Ensure both fields are not empty
+
 	if ValidateSignupParams(v, params); !v.Valid() {
 		handleError(validationError(v.Errors), w)
 		return
 	}
 
-	// Do a DB query to find the email, if it exists send an error
+	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	defer cancel()
 
-	// If a user doesn't exist already, create a new user and store in DB. This can be own function
-		// Create new model instance
+	tx, err := api.db.Begin(ctx)
+	if err != nil {
+		handleError(serverError("Error creating transactions"), w)
+	}
+	defer tx.Rollback(ctx)
+
+
+	var id pgtype.UUID
+	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
+	if err != nil {
+		fmt.Println(err)
+		if isDuplicateError(err) {
+			handleError(badRequestError("user already exists"), w)
+		}
+	}
+
+	if id.Valid {
+		v.AddError("user", "already exists")
+		handleError(badRequestError("user already exists"), w)
+		return
+	}
+
 	user, err := models.NewUser(params.Email, params.Password)
 	if err != nil {
-		// handle error
 		sendJSON(w, http.StatusInternalServerError, nil)
 	}
-		// Set any fields you need
 	user.Provider = "email"
-		// Store in DB
-		// Handle any errors
 
+	query := `
+        INSERT INTO users (name, email, encrypted_password, activated, provider) 
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, created_at, version`
+	args := []any{
+		user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider,
+	}
 
-	// Send a response back with HTTP Ok and user
+	_, err = tx.Exec(ctx, query, args...)
+	if err != nil {
+		if err.Error() == `duplicate key value violates unique constraint "users_email_key"` {
+			handleError(badRequestError("user already exists"), w)
+		}
+		handleError(serverError("Error adding new user"), w)
+		return
+	}
+
+	tx.Commit(ctx)
 	sendJSON(w, http.StatusOK, user)
 }
 
