@@ -30,6 +30,7 @@ func NewUser(email, password string) (*User, error) {
 		Email: 	email,
 		CreatedAt: time.Now(),
 		EncryptedPassword: pw,
+		Provider: "email",
 	}
 
 	return user, nil

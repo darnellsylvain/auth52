@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -58,10 +57,7 @@ func signupNewUser(ctx context.Context, tx pgx.Tx, params SignupParams) (*models
 	var id pgtype.UUID
 	err := tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
 	if err != nil {
-		fmt.Println(err)
-		if isDuplicateError(err) {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if id.Valid {
@@ -71,17 +67,11 @@ func signupNewUser(ctx context.Context, tx pgx.Tx, params SignupParams) (*models
 	user, err := models.NewUser(params.Email, params.Password)
 	if err != nil {
 		return nil, serverError("could not create user")
-		
 	}
-	user.Provider = "email"
 
 	_, err = tx.Exec(ctx, query, user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider)
 	if err != nil {
-		if err.Error() == `duplicate key value violates unique constraint "users_email_key"` {
-			return nil, badRequestError("user already exists")
-		}
 		return nil, serverError("Error adding new user")
-	
 	}
 
 	return user, nil
