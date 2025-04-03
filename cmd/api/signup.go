@@ -8,12 +8,13 @@ import (
 
 	validator "github.com/darnellsylvain/auth52/internal"
 	"github.com/darnellsylvain/auth52/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 var query = `INSERT INTO users (name, email, encrypted_password, activated, provider) 
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, version`
-		
+
 type SignupParams struct {
 	Email 		string `json:"email"`
 	Password 	string `json:"password"`
@@ -29,7 +30,6 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	v := validator.New()
-
 	if ValidateSignupParams(v, params); !v.Valid() {
 		handleError(validationError(v.Errors), w)
 		return
@@ -44,36 +44,9 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback(ctx)
 
-
-	var id pgtype.UUID
-	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
+	user, err := signupNewUser(ctx, tx, *params)
 	if err != nil {
-		fmt.Println(err)
-		if isDuplicateError(err) {
-			handleError(badRequestError("user already exists"), w)
-		}
-	}
-
-	if id.Valid {
-		v.AddError("user", "already exists")
-		handleError(badRequestError("user already exists"), w)
-		return
-	}
-
-	user, err := models.NewUser(params.Email, params.Password)
-	if err != nil {
-		sendJSON(w, http.StatusInternalServerError, nil)
-		return
-	}
-	user.Provider = "email"
-
-	_, err = tx.Exec(ctx, query, user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider)
-	if err != nil {
-		if err.Error() == `duplicate key value violates unique constraint "users_email_key"` {
-			handleError(badRequestError("user already exists"), w)
-		}
-		handleError(serverError("Error adding new user"), w)
-		return
+		handleError(serverError("Error creating user"), w)
 	}
 
 	tx.Commit(ctx)
@@ -81,3 +54,35 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	sendJSON(w, http.StatusOK, user)
 }
 
+func signupNewUser(ctx context.Context, tx pgx.Tx, params SignupParams) (*models.User, error) {
+	var id pgtype.UUID
+	err := tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
+	if err != nil {
+		fmt.Println(err)
+		if isDuplicateError(err) {
+			return nil, err
+		}
+	}
+
+	if id.Valid {
+		return nil, badRequestError("user already exists")
+	}
+
+	user, err := models.NewUser(params.Email, params.Password)
+	if err != nil {
+		return nil, serverError("could not create user")
+		
+	}
+	user.Provider = "email"
+
+	_, err = tx.Exec(ctx, query, user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider)
+	if err != nil {
+		if err.Error() == `duplicate key value violates unique constraint "users_email_key"` {
+			return nil, badRequestError("user already exists")
+		}
+		return nil, serverError("Error adding new user")
+	
+	}
+
+	return user, nil
+}
