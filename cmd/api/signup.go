@@ -40,15 +40,20 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	tx, err := api.db.Begin(ctx)
 	if err != nil {
 		handleError(serverError("Error creating transactions"), w)
+		return
 	}
 	defer tx.Rollback(ctx)
 
 	user, err := signupNewUser(ctx, tx, *params)
 	if err != nil {
 		handleError(serverError("Error creating user"), w)
+		return
 	}
 
-	tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+    	handleError(serverError("Transaction commit failed"), w)
+    	return
+	}
 
 	sendJSON(w, http.StatusOK, user)
 }
@@ -57,21 +62,22 @@ func signupNewUser(ctx context.Context, tx pgx.Tx, params SignupParams) (*models
 	var id pgtype.UUID
 	err := tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
 	if err != nil {
-		return nil, err
-	}
-
-	if id.Valid {
-		return nil, badRequestError("user already exists")
-	}
+    	switch err {
+    		case pgx.ErrNoRows:
+        	break
+    	default:
+        	return nil, err
+    	}
+	} 
 
 	user, err := models.NewUser(params.Email, params.Password)
 	if err != nil {
-		return nil, serverError("could not create user")
+		return nil, err
 	}
 
 	_, err = tx.Exec(ctx, query, user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider)
 	if err != nil {
-		return nil, serverError("Error adding new user")
+		return nil, err
 	}
 
 	return user, nil
