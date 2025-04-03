@@ -13,6 +13,7 @@ import (
 var query = `INSERT INTO users (name, email, encrypted_password, activated, provider) 
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, version`
+		
 type SignupParams struct {
 	Email 		string `json:"email"`
 	Password 	string `json:"password"`
