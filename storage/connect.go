@@ -30,9 +30,7 @@ func Dial() (*Connection, error) {
 		return nil, fmt.Errorf("db ping failed: %w", err)
 	}
 
-	return &Connection{dbpool}, nil
-}
+	log.Println("db connected")
 
-func (c *Connection) Shutdown() {
-	c.Close()
+	return &Connection{dbpool}, nil
 }
