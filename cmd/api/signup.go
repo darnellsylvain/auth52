@@ -10,7 +10,9 @@ import (
 	"github.com/darnellsylvain/auth52/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
+var query = `INSERT INTO users (name, email, encrypted_password, activated, provider) 
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, version`
 type SignupParams struct {
 	Email 		string `json:"email"`
 	Password 	string `json:"password"`
@@ -60,18 +62,11 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	user, err := models.NewUser(params.Email, params.Password)
 	if err != nil {
 		sendJSON(w, http.StatusInternalServerError, nil)
+		return
 	}
 	user.Provider = "email"
 
-	query := `
-        INSERT INTO users (name, email, encrypted_password, activated, provider) 
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, created_at, version`
-	args := []any{
-		user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider,
-	}
-
-	_, err = tx.Exec(ctx, query, args...)
+	_, err = tx.Exec(ctx, query, user.Name, user.Email, user.EncryptedPassword, user.Activated, user.Provider)
 	if err != nil {
 		if err.Error() == `duplicate key value violates unique constraint "users_email_key"` {
 			handleError(badRequestError("user already exists"), w)
@@ -81,6 +76,7 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx.Commit(ctx)
+
 	sendJSON(w, http.StatusOK, user)
 }
 
