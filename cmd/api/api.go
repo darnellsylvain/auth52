@@ -33,7 +33,6 @@ func NewAPI() *API {
 		os.Exit(1)
 	}
 	api.db = db
-	defer db.Shutdown()
 
 	// Initiallize Router
 	router := NewRouter()
@@ -94,5 +93,8 @@ func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
 
 
 func (api *API) Shutdown(ctx context.Context) {
-	api.db.Close()
+	if api.db != nil {
+		api.db.Close()
+		log.Println("Database connection closed")
+	}
 }
