@@ -1,8 +1,11 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type HTTPError struct {
@@ -22,6 +25,10 @@ func (e *HTTPError) Error() string {
 
 func badRequestError(fmtString string, args ...interface{}) *HTTPError {
 	return httpError(http.StatusBadRequest, fmtString, args...)
+}
+
+func serverError(fmtString string, args ...interface{}) *HTTPError {
+	return httpError(http.StatusInternalServerError, fmtString, args...)
 }
 
 func validationError(errors map[string]string) *HTTPError {
@@ -47,4 +54,9 @@ func httpError(code int, fmtString string, args ...interface{}) *HTTPError {
 
 func handleError(err *HTTPError, w http.ResponseWriter) {
 	sendJSON(w, err.Code, err)
+}
+
+func isDuplicateError(err error) bool {
+    var pgErr *pgconn.PgError
+    return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
