@@ -39,6 +39,7 @@ func NewAPI() *API {
 	router.mux.HandleFunc("/healthcheck", api.HealthCheck)
 	router.mux.HandleFunc("/user", api.GetUser)
 	router.mux.HandleFunc("/signup", api.Signup).Methods("POST")
+	router.mux.HandleFunc("/login", api.Login).Methods("GET")
 
 	api.handler = router
 

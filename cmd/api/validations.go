@@ -25,3 +25,8 @@ func ValidateSignupParams(v *validator.Validator, params *SignupParams) {
 	ValidateEmail(v, params.Email)
 	ValidatePassword(v, params.Password)
 }
+
+func ValidateLoginParams(v *validator.Validator, params *LoginParams) {
+	ValidateEmail(v, params.Email)
+	ValidatePassword(v, params.Password)
+}

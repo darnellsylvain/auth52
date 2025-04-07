@@ -45,6 +45,10 @@ func hashPassword(plaintextPassword string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return hash, nil
+}
+
+func (user *User) Authenticate(password string) bool {
+	err := bcrypt.CompareHashAndPassword(user.EncryptedPassword, []byte(password))
+	return err == nil
 }
