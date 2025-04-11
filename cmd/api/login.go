@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -46,17 +45,12 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		&user.Provider,
 	)
 
-
-	fmt.Println("found: ", user)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			fmt.Println("No user found with this email")
 			handleError(badRequestError("no user with this email %v", err), w)
 			return 
 		}
-
-		fmt.Println("Error querying user:", err)
 		return
 
 	}
@@ -64,10 +58,8 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	ok := user.Authenticate(params.Password)
 	if !ok {
 		handleError(badRequestError("email or password is incorrect"), w)
-		fmt.Println("not authenticated", ok)
 		return 
 	}
-	fmt.Println("authenticated", ok)
-	fmt.Println("I run down here")
+
 	sendJSON(w, http.StatusOK, user)
 }
