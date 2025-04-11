@@ -18,5 +18,5 @@ func (api *API) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	sendJSON(w, http.StatusOK, &models.User{
 		Email:     "alice@example.com",
-	})
+	}, nil)
 }

@@ -1,62 +1,45 @@
 package api
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type HTTPError struct {
-	Code            int 				`json:"code"`
-	Message         string				`json:"message"`
-	InternalError   error				`json:"-"`
-	InternalMessage string				`json:"-"`
-	Errors			map[string]string	`json:"errors"`
+type HttpError struct {
+	Status		int
+	Message		string
+	Errors		map[string]string
 }
 
-func (e *HTTPError) Error() string {
-	if e.InternalMessage != "" {
-		return e.InternalMessage
-	}
-	return fmt.Sprintf("%d: %s", e.Code, e.Message)
+func (api *API) logError(r *http.Request, err error) {
+	var (
+		method = r.Method
+		uri = r.URL.RequestURI()
+	)
+
+	api.logger.Error(err.Error(), "method", method, "uri", uri)
 }
 
-func badRequestError(fmtString string, args ...interface{}) *HTTPError {
-	return httpError(http.StatusBadRequest, fmtString, args...)
-}
+func (api *API) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
+	env := envelope{"error": message, "status": status}
 
-func serverError(fmtString string, args ...interface{}) *HTTPError {
-	return httpError(http.StatusInternalServerError, fmtString, args...)
-}
-
-func validationError(errors map[string]string) *HTTPError {
-		return &HTTPError{
-		Code:    http.StatusBadRequest,
-		Message: "validation failed",
-		Errors:  errors,
+	err := sendJSON(w, status, env, nil)
+	if err != nil {
+		api.logError(r, err)
+		w.WriteHeader(500)
 	}
 }
 
-
-func unprocessableEntityError(fmtString string, args ...interface{}) *HTTPError {
-	return httpError(http.StatusUnprocessableEntity, fmtString, args...)
+func (api *API) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
+	api.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
 
+func (api *API) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	api.logError(r, err)
 
-func httpError(code int, fmtString string, args ...interface{}) *HTTPError {
-	return &HTTPError{
-		Code:    code,
-		Message: fmt.Sprintf(fmtString, args...),
-	}
+	message := "the server encountered a problem and could not process your request"
+	api.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
-func handleError(err *HTTPError, w http.ResponseWriter) {
-	sendJSON(w, err.Code, err)
-}
-
-func isDuplicateError(err error) bool {
-    var pgErr *pgconn.PgError
-    return errors.As(err, &pgErr) && pgErr.Code == "23505"
+func (api *API) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
+	api.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }

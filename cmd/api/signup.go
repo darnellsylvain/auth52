@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -14,6 +15,8 @@ var query = `INSERT INTO users (name, email, encrypted_password, activated, prov
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, version`
 
+var ErrDuplicateEmail = errors.New("email already in use")
+
 type SignupParams struct {
 	Email 		string `json:"email"`
 	Password 	string `json:"password"`
@@ -24,13 +27,13 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 	
 	err := readJSON(w, r, params)
 	if err != nil {
-		badRequestError("Could not read signup params %v", err)
+		api.badRequestError(w, r, err)
 		return
 	}
 	
 	v := validator.New()
 	if ValidateSignupParams(v, params); !v.Valid() {
-		handleError(validationError(v.Errors), w)
+		api.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
@@ -39,36 +42,38 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := api.db.Begin(ctx)
 	if err != nil {
-		handleError(serverError("Error creating transactions"), w)
+		api.serverErrorResponse(w, r, err)
 		return
 	}
 	defer tx.Rollback(ctx)
 
 	user, err := signupNewUser(ctx, tx, *params)
 	if err != nil {
-		handleError(serverError("Error creating user"), w)
+		api.badRequestError(w, r, err)
 		return
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-    	handleError(serverError("Transaction commit failed"), w)
+    	api.serverErrorResponse(w, r, err)
     	return
 	}
 
-	sendJSON(w, http.StatusOK, user)
+	sendJSON(w, http.StatusOK, user, nil)
 }
 
 func signupNewUser(ctx context.Context, tx pgx.Tx, params SignupParams) (*models.User, error) {
 	var id pgtype.UUID
 	err := tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, params.Email).Scan(&id)
-	if err != nil {
+	if err == nil {
+		return nil, ErrDuplicateEmail
+	} else  {
     	switch err {
     		case pgx.ErrNoRows:
         	break
-    	default:
-        	return nil, err
+    		default:
+        		return nil, err
     	}
-	} 
+	}
 
 	user, err := models.NewUser(params.Email, params.Password)
 	if err != nil {

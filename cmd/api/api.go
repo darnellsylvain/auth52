@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,6 +19,7 @@ type API struct {
 	db 			*storage.Connection
 	// config
 	version string
+	logger *slog.Logger
 }
 
 
@@ -25,6 +27,9 @@ func NewAPI() *API {
 	api := &API{
 		version: "1",
 	}
+
+	l := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	api.logger = l
 
 	// Initialise DB
 	db, err := storage.Dial()
@@ -43,11 +48,12 @@ func NewAPI() *API {
 
 	api.handler = router
 
+
+
 	return api
 }
 
 func (api *API) ListenAndServe() {
-	l := log.New(os.Stdout, "INFO: ", log.LstdFlags)
 
 	server := &http.Server{
 		Addr: ":8080",
@@ -60,7 +66,7 @@ func (api *API) ListenAndServe() {
 	done := make(chan struct{})
 
 	go func() {
-		waitForTermination(l, done)
+		waitForTermination(api.logger, done)
 		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 		defer cancel()
 		api.Shutdown(ctx)
@@ -69,19 +75,19 @@ func (api *API) ListenAndServe() {
 
 	err := server.ListenAndServe()
 	if err != nil {
-		l.Fatal(err)
+		api.logger.Error(err.Error())
 	}
 }
 
-func waitForTermination(log *log.Logger, done <-chan struct{}) {
+func waitForTermination(log *slog.Logger, done <-chan struct{}) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	
 	signal := <-sigChan
-	log.Fatalf("Recieved shutdown signal from %s", signal)
+	log.Info("Recieved shutdown signal from %s", signal)
 
 	<-done
-	log.Println("Shutting down...")
+	log.Info("Shutting down...")
 }
 
 func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +95,7 @@ func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		"version":     api.version,
 		"name":        "Auth 52",
 		"description": "Auth 52 is a user registration and authentication API",
-	})
+	}, nil)
 }
 
 

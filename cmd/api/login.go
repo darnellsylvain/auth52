@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -22,13 +23,13 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := readJSON(w, r, params)
 	if err != nil {
-		badRequestError("Could not read signup params %v", err)
+		api.badRequestError(w, r, err)
 		return 
 	}
 
 	v := validator.New()
 	if ValidateLoginParams(v, params); !v.Valid() {
-		handleError(validationError(v.Errors), w)
+		api.failedValidationResponse(w, r, v.Errors)
 		return 
 	}
 
@@ -48,7 +49,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			handleError(badRequestError("no user with this email %v", err), w)
+			api.badRequestError(w, r, err)
 			return 
 		}
 		return
@@ -57,9 +58,9 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 
 	ok := user.Authenticate(params.Password)
 	if !ok {
-		handleError(badRequestError("email or password is incorrect"), w)
+		api.badRequestError(w, r, errors.New("email or password is incorrect"))
 		return 
 	}
 
-	sendJSON(w, http.StatusOK, user)
+	sendJSON(w, http.StatusOK, user, nil)
 }
