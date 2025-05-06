@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"github.com/darnellsylvain/auth52/internal/auth"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,7 +21,7 @@ type User struct {
 func NewUser(email, password string) (*User, error) {
 	id := uuid.New()
 
-	pw, err := hashPassword(password)
+	pw, err := auth.HashPassword(password)
 	if err != nil {
 		return nil, err
 	}
@@ -40,15 +41,8 @@ func (user *User) isActivated() bool {
 	return user.Activated
 }
 
-func hashPassword(plaintextPassword string) ([]byte, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(plaintextPassword), 12)
-	if err != nil {
-		return nil, err
-	}
-	return hash, nil
-}
-
 func (user *User) Authenticate(password string) bool {
 	err := bcrypt.CompareHashAndPassword(user.EncryptedPassword, []byte(password))
 	return err == nil
 }
+

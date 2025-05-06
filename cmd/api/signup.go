@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	validator "github.com/darnellsylvain/auth52/internal"
+	validator "github.com/darnellsylvain/auth52/internal/validator"
 	"github.com/darnellsylvain/auth52/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"

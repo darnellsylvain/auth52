@@ -48,8 +48,6 @@ func NewAPI() *API {
 
 	api.handler = router
 
-
-
 	return api
 }
 
@@ -84,8 +82,8 @@ func waitForTermination(log *slog.Logger, done <-chan struct{}) {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	
 	signal := <-sigChan
-	log.Info("Recieved shutdown signal from %s", signal)
-
+	log.Info("Received shutdown signal", "signal", signal.String())
+	
 	<-done
 	log.Info("Shutting down...")
 }

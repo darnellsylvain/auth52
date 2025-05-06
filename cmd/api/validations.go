@@ -1,7 +1,7 @@
 package api
 
 import (
-	validator "github.com/darnellsylvain/auth52/internal"
+	validator "github.com/darnellsylvain/auth52/internal/validator"
 )
 
 
