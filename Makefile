@@ -7,7 +7,7 @@ MIGRATE=docker compose run --rm migrate
 migrate-create:
 	@read -p "Enter migration name: " name; \
 	$(MIGRATE) create "$$name" sql
-	goose -dir migrations create "$$name" sql
+	goose -dir .sql/migrations create "$$name" sql
 
 .PHONY: run
 run:

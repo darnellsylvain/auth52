@@ -31,7 +31,7 @@ services:
     container_name: auth52_migrations
     image: kukymbr/goose-docker
     volumes:
-      - ./migrations:/migrations
+      - ./sql/migrations:/migrations
     environment:
       GOOSE_DRIVER: postgres
       GOOSE_DBSTRING: postgres://auth52:password@auth52_db:5432/auth52_db?sslmode=disable
