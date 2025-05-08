@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -11,9 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-
-
-var loginQuery = `SELECT id, created_at, name, email, encrypted_password, activated, provider FROM users WHERE email = $1`
 
 type LoginParams struct {
 	Email 		string `json:"email"`
@@ -38,25 +36,19 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 	defer cancel()
 
-	user := &models.User{}
-	err = api.db.QueryRow(ctx, loginQuery, params.Email).Scan(&user.ID,
-		&user.CreatedAt,
-		&user.Name,
-		&user.Email,
-		&user.EncryptedPassword,
-		&user.Activated,
-		&user.Provider,
-	)
-
+	userDB, err := api.queries.FindUserByEmail(ctx, params.Email)
+	fmt.Print("ERROR", err)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			api.badRequestError(w, r, err)
+			api.badRequestError(w, r, errors.New("email or password is incorrect"))
 			return 
 		}
 		return
-
 	}
+
+	user := models.FromDBUser(userDB)
+	fmt.Print("user", user)
 
 	ok := user.Authenticate(params.Password)
 	if !ok {

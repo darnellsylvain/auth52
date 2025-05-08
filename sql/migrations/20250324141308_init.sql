@@ -6,12 +6,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
+    created_at timestamp with time zone NOT NULL DEFAULT NOW(),
     name varchar(255),
     email citext UNIQUE NOT NULL,
     encrypted_password bytea NOT NULL,
     activated bool NOT NULL,
-    provider varchar(255),
+    provider varchar(255) NOT NULL DEFAULT 'email',
     version integer NOT NULL DEFAULT 1
 );
 -- +goose StatementEnd

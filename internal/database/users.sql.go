@@ -7,14 +7,50 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const getUsers = `-- name: GetUsers :many
-SELECT id, created_at, name, email, encrypted_password, activated, provider, version FROM users ORDER BY email
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (name, email, encrypted_password, activated, provider) 
+VALUES ($1, $2, $3, $4, $5) 
+RETURNING id, created_at, version
 `
 
-func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, getUsers)
+type CreateUserParams struct {
+	Name              *string
+	Email             string
+	EncryptedPassword []byte
+	Activated         bool
+	Provider          string
+}
+
+type CreateUserRow struct {
+	ID        uuid.UUID
+	CreatedAt pgtype.Timestamptz
+	Version   int32
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+	row := q.db.QueryRow(ctx, createUser,
+		arg.Name,
+		arg.Email,
+		arg.EncryptedPassword,
+		arg.Activated,
+		arg.Provider,
+	)
+	var i CreateUserRow
+	err := row.Scan(&i.ID, &i.CreatedAt, &i.Version)
+	return i, err
+}
+
+const findAllUsers = `-- name: FindAllUsers :many
+SELECT id, created_at, name, email, encrypted_password, activated, provider, version FROM users
+`
+
+func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, findAllUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -36,11 +72,39 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return items, nil
+}
+
+const findUserByEmail = `-- name: FindUserByEmail :one
+SELECT id, created_at, name, email, encrypted_password, activated, provider 
+FROM users 
+WHERE email = $1
+`
+
+type FindUserByEmailRow struct {
+	ID                uuid.UUID
+	CreatedAt         pgtype.Timestamptz
+	Name              *string
+	Email             string
+	EncryptedPassword []byte
+	Activated         bool
+	Provider          string
+}
+
+func (q *Queries) FindUserByEmail(ctx context.Context, email string) (FindUserByEmailRow, error) {
+	row := q.db.QueryRow(ctx, findUserByEmail, email)
+	var i FindUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Email,
+		&i.EncryptedPassword,
+		&i.Activated,
+		&i.Provider,
+	)
+	return i, err
 }

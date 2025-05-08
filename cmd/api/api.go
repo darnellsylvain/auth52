@@ -11,13 +11,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/darnellsylvain/auth52/internal/database"
 	"github.com/darnellsylvain/auth52/storage"
 )
 
 type API struct {
 	handler 	http.Handler
 	db 			*storage.Connection
-	// config
+	queries		*database.Queries
 	version string
 	logger *slog.Logger
 }
@@ -38,6 +39,7 @@ func NewAPI() *API {
 		os.Exit(1)
 	}
 	api.db = db
+	api.queries = database.New(db)
 
 	// Initiallize Router
 	router := NewRouter()

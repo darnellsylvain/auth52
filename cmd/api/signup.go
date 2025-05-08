@@ -7,6 +7,7 @@ import (
 	"time"
 
 	validator "github.com/darnellsylvain/auth52/internal/validator"
+
 	"github.com/darnellsylvain/auth52/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,8 +24,8 @@ type SignupParams struct {
 }
 
 func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
-	params := &SignupParams{}
-	
+	params := &SignupParams{}	
+
 	err := readJSON(w, r, params)
 	if err != nil {
 		api.badRequestError(w, r, err)
