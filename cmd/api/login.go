@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -37,7 +36,6 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	userDB, err := api.queries.FindUserByEmail(ctx, params.Email)
-	fmt.Print("ERROR", err)
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
@@ -48,7 +46,6 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.FromDBUser(userDB)
-	fmt.Print("user", user)
 
 	ok := user.Authenticate(params.Password)
 	if !ok {
