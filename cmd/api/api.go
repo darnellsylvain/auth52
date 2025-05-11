@@ -11,22 +11,34 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/darnellsylvain/auth52/internal/config"
 	"github.com/darnellsylvain/auth52/internal/database"
 	"github.com/darnellsylvain/auth52/storage"
+	"github.com/joho/godotenv"
 )
 
 type API struct {
 	handler 	http.Handler
 	db 			*storage.Connection
 	queries		*database.Queries
-	version string
-	logger *slog.Logger
+	version 	string
+	logger 		*slog.Logger
+	jwtSecret 	string
+
 }
 
 
 func NewAPI() *API {
+	_ = godotenv.Load()
+
+    cfg, err := config.Load()
+    if err != nil {
+        log.Fatalf("config load: %v", err)
+    }
+
 	api := &API{
 		version: "1",
+		jwtSecret: cfg.JWTSecret,
 	}
 
 	l := slog.New(slog.NewTextHandler(os.Stdout, nil))
