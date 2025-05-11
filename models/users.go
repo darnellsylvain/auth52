@@ -6,7 +6,6 @@ import (
 	"github.com/darnellsylvain/auth52/internal/auth"
 	"github.com/darnellsylvain/auth52/internal/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -48,18 +47,10 @@ func (user *User) Authenticate(password string) bool {
 	return err == nil
 }
 
-
-func toTimeOrZero(tz pgtype.Timestamptz) time.Time {
-    if tz.Valid {
-        return tz.Time
-    }
-    return time.Time{}
-}
-
 func FromDBUser(u database.FindUserByEmailRow) *User {
 	return &User{
 		ID:                	u.ID,
-		CreatedAt:			toTimeOrZero(u.CreatedAt),
+		CreatedAt:			u.CreatedAt.Time,
 		Name:              	u.Name,
 		Email:             	u.Email,
 		EncryptedPassword: 	u.EncryptedPassword,
