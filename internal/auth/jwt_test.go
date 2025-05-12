@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -14,8 +15,8 @@ func TestMakeJWT_ValidToken(t *testing.T) {
 
 	userID := uuid.New()
 	email := "alice@example.com"
-	secret := "test-secret"
-	ttl := time.Minute
+	// secret := "test-secret"
+	// ttl := time.Minute
 
 	// Generate a token
 	tokenString, err := MakeJWT(userID, email)
@@ -25,7 +26,7 @@ func TestMakeJWT_ValidToken(t *testing.T) {
 	// Parse it to inspect claims
 	claims := &Auth52Claims{}
 	parsed, err := jwt.ParseWithClaims(tokenString, claims, func(tok *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
+		return []byte(os.Getenv("AUTH52_JWT_SECRET")), nil
 	})
 	assert.NoError(err, "ParseWithClaims should not return an error")
 	assert.True(parsed.Valid, "token should be valid")
@@ -37,7 +38,7 @@ func TestMakeJWT_ValidToken(t *testing.T) {
 
 	now := time.Now()
 	assert.WithinDuration(now, claims.IssuedAt.Time, time.Second, "IssuedAt should be ~now")
-	assert.WithinDuration(now.Add(ttl), claims.ExpiresAt.Time, time.Second, "ExpiresAt should be ~now+ttl")
+	assert.WithinDuration(now.Add(time.Hour), claims.ExpiresAt.Time, time.Second, "ExpiresAt should be ~now+ttl")
 }
 
 func TestValidateJWT_Success(t *testing.T) {
