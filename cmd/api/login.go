@@ -20,8 +20,7 @@ type LoginParams struct {
 func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	params := &LoginParams{}
 
-	err := readJSON(w, r, params)
-	if err != nil {
+	if err := readJSON(w, r, params); err != nil {
 		api.badRequestError(w, r, err)
 		return 
 	}
@@ -37,11 +36,11 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 
 	userDB, err := api.queries.FindUserByEmail(ctx, params.Email)
 	if err != nil {
-		switch err {
-		case pgx.ErrNoRows:
+		if errors.Is(err, pgx.ErrNoRows) {
 			api.badRequestError(w, r, errors.New("email or password is incorrect"))
-			return 
+			return
 		}
+		api.serverErrorResponse(w, r, err)		
 		return
 	}
 
