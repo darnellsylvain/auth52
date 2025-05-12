@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,8 +12,7 @@ type Connection struct {
 	*pgxpool.Pool
 }
 
-func Dial() (*Connection, error) {
-	connStr := os.Getenv("AUTH52_DB_URL")
+func Dial(connStr string) (*Connection, error) {
 	if connStr == "" {
 		log.Fatal("Database URL is not set")
 	}

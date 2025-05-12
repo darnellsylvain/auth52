@@ -14,7 +14,6 @@ import (
 	"github.com/darnellsylvain/auth52/internal/config"
 	"github.com/darnellsylvain/auth52/internal/database"
 	"github.com/darnellsylvain/auth52/storage"
-	"github.com/joho/godotenv"
 )
 
 type API struct {
@@ -29,8 +28,6 @@ type API struct {
 
 
 func NewAPI() *API {
-	_ = godotenv.Load()
-
     cfg, err := config.Load()
     if err != nil {
         log.Fatalf("config load: %v", err)
@@ -45,7 +42,7 @@ func NewAPI() *API {
 	api.logger = l
 
 	// Initialise DB
-	db, err := storage.Dial()
+	db, err := storage.Dial(cfg.DBURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 		os.Exit(1)
@@ -54,11 +51,11 @@ func NewAPI() *API {
 	api.queries = database.New(db)
 
 	// Initiallize Router
-	router := NewRouter()
-	router.mux.HandleFunc("/healthcheck", api.HealthCheck)
-	router.mux.HandleFunc("/user", api.GetUser)
-	router.mux.HandleFunc("/signup", api.Signup).Methods("POST")
-	router.mux.HandleFunc("/login", api.Login).Methods("GET")
+	router := NewRouter().mux
+	router.HandleFunc("/healthcheck", api.HealthCheck)
+	router.HandleFunc("/user", api.GetUser)
+	router.HandleFunc("/signup", api.Signup).Methods("POST")
+	router.HandleFunc("/login", api.Login).Methods("GET")
 
 	api.handler = router
 
@@ -66,7 +63,6 @@ func NewAPI() *API {
 }
 
 func (api *API) ListenAndServe() {
-
 	server := &http.Server{
 		Addr: ":8080",
 		Handler: api.RecoverPanic(api.handler),

@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,14 +23,19 @@ const (
 	TokenIssuer TokenType = "Auth52"
 )
 
+var (
+	jwtSecret = []byte(os.Getenv("AUTH52_JWT_SECRET"))
+	jwtExpires = time.Hour
+)
 
-func MakeJWT(userId uuid.UUID, email, tokenSecret string, expiresIn time.Duration) (string, error) {
+
+func MakeJWT(userId uuid.UUID, email string) (string, error) {
 	claims := &Auth52Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userId.String(),
 			Issuer: string(TokenIssuer),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(jwtExpires)),
 		},
 		UserId: userId.String(),
 		Email: email,
@@ -37,7 +43,7 @@ func MakeJWT(userId uuid.UUID, email, tokenSecret string, expiresIn time.Duratio
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedString, err := token.SignedString([]byte(tokenSecret))
+	signedString, err := token.SignedString(jwtSecret)
 	if err != nil {
 		return "", err
 	}
@@ -45,13 +51,13 @@ func MakeJWT(userId uuid.UUID, email, tokenSecret string, expiresIn time.Duratio
 	return signedString, nil
 }
 
-func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
+func ValidateJWT(tokenString string) (uuid.UUID, error) {
 	claims := &Auth52Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != jwt.SigningMethodHS256 {
             return nil, fmt.Errorf("unexpected signing method: %v", token.Method)
 		}
-		return []byte(tokenSecret), nil
+		return jwtSecret, nil
 	})
     if err != nil {
         if errors.Is(err, jwt.ErrTokenExpired) {

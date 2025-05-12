@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/darnellsylvain/auth52/internal/auth"
 	validator "github.com/darnellsylvain/auth52/internal/validator"
 	"github.com/darnellsylvain/auth52/models"
 	"github.com/jackc/pgx/v5"
@@ -15,6 +16,11 @@ import (
 type LoginParams struct {
 	Email 		string `json:"email"`
 	Password 	string `json:"password"`
+}
+
+type LoginResponse struct {
+	User *models.User 	`json:"user"`
+	Token string		`json:"token"`
 }
 
 func (api *API) Login(w http.ResponseWriter, r *http.Request) {
@@ -52,5 +58,16 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		return 
 	}
 
-	sendJSON(w, http.StatusOK, user, nil)
+	
+	token, err := auth.MakeJWT(user.ID, user.Email)
+	if err != nil {
+		api.serverErrorResponse(w, r, err)
+	}
+
+	response := &LoginResponse{
+		User: 	user,
+		Token: 	token,
+	}
+
+	sendJSON(w, http.StatusOK, response, nil)
 }
