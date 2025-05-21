@@ -9,6 +9,7 @@ migrate-create:
 	$(MIGRATE) create "$$name" sql
 	goose -dir .sql/migrations create "$$name" sql
 
+
 .PHONY: run
 run:
 	go run main.go
@@ -31,8 +32,8 @@ docker-db-shell:
 
 .PHONY: migrate-up
 migrate-up:
-	docker compose run --rm migrate up
+	$(MIGRATE) up
 
 .PHONY: migrate-down
 migrate-down:
-	docker compose run --rm migrate down
+	$(MIGRATE) down
