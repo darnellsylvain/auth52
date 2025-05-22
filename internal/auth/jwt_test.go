@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMakeJWT_ValidToken(t *testing.T) {
+func TestCreateToken_ValidToken(t *testing.T) {
 	assert := assert.New(t)
 
 	userID := uuid.New()
@@ -19,9 +19,9 @@ func TestMakeJWT_ValidToken(t *testing.T) {
 	// ttl := time.Minute
 
 	// Generate a token
-	tokenString, err := MakeJWT(userID, email)
-	assert.NoError(err, "MakeJWT should not return an error")
-	assert.NotEmpty(tokenString, "MakeJWT should return a non-empty token")
+	tokenString, err := CreateToken(userID, email)
+	assert.NoError(err, "CreateToken should not return an error")
+	assert.NotEmpty(tokenString, "CreateToken should return a non-empty token")
 
 	// Parse it to inspect claims
 	claims := &Auth52Claims{}
@@ -41,40 +41,40 @@ func TestMakeJWT_ValidToken(t *testing.T) {
 	assert.WithinDuration(now.Add(time.Hour), claims.ExpiresAt.Time, time.Second, "ExpiresAt should be ~now+ttl")
 }
 
-func TestValidateJWT_Success(t *testing.T) {
+func TestValidateToken_Success(t *testing.T) {
 	assert := assert.New(t)
 
 	userID := uuid.New()
 	email := "bob@example.com"
 
 	// Create a valid token
-	tokenString, err := MakeJWT(userID, email)
+	tokenString, err := CreateToken(userID, email)
 	assert.NoError(err)
 	assert.NotEmpty(tokenString)
 
 	// Validate it
-	returnedID, err := ValidateJWT(tokenString)
-	assert.NoError(err, "ValidateJWT should not return an error for a valid token")
-	assert.Equal(userID, returnedID, "ValidateJWT should return the original user ID")
+	returnedID, err := ValidateToken(tokenString)
+	assert.NoError(err, "ValidateToken should not return an error for a valid token")
+	assert.Equal(userID, returnedID, "ValidateToken should return the original user ID")
 }
 
-// func TestValidateJWT_Expired(t *testing.T) {
+// func TestValidateToken_Expired(t *testing.T) {
 // 	assert := assert.New(t)
 
 // 	userID := uuid.New()
 // 	email := "eve@example.com"
 
 // 	// Create an already-expired token
-// 	tokenString, err := MakeJWT(userID, email)
+// 	tokenString, err := CreateToken(userID, email)
 // 	assert.NoError(err)
 
 // 	// Validate should fail
-// 	_, err = ValidateJWT(tokenString)
-// 	assert.Error(err, "ValidateJWT should return an error for expired token")
+// 	_, err = ValidateToken(tokenString)
+// 	assert.Error(err, "ValidateToken should return an error for expired token")
 // 	assert.Contains(err.Error(), "expired", "Error should mention expiration")
 // }
 
-// func TestValidateJWT_WrongSecret(t *testing.T) {
+// func TestValidateToken_WrongSecret(t *testing.T) {
 // 	assert := assert.New(t)
 
 // 	userID := uuid.New()
@@ -82,11 +82,11 @@ func TestValidateJWT_Success(t *testing.T) {
 // 	secret := "correct-secret"
 
 // 	// Create a token with one secret...
-// 	tokenString, err := MakeJWT(userID, email, secret, time.Minute)
+// 	tokenString, err := CreateToken(userID, email, secret, time.Minute)
 // 	assert.NoError(err)
 
 // 	// ...but validate with another
-// 	_, err = ValidateJWT(tokenString, "wrong-secret")
-// 	assert.Error(err, "ValidateJWT should return an error when the secret is wrong")
+// 	_, err = ValidateToken(tokenString, "wrong-secret")
+// 	assert.Error(err, "ValidateToken should return an error when the secret is wrong")
 // 	assert.Contains(err.Error(), "invalid token", "Error should mention invalid token")
 // }

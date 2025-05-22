@@ -59,7 +59,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	
-	token, err := auth.MakeJWT(user.ID, user.Email)
+	token, err := auth.CreateToken(user.ID, user.Email)
 	if err != nil {
 		api.serverErrorResponse(w, r, err)
 	}

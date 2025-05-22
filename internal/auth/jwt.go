@@ -29,7 +29,7 @@ var (
 )
 
 
-func MakeJWT(userId uuid.UUID, email string) (string, error) {
+func CreateToken(userId uuid.UUID, email string) (string, error) {
 	claims := &Auth52Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: userId.String(),
@@ -51,7 +51,7 @@ func MakeJWT(userId uuid.UUID, email string) (string, error) {
 	return signedString, nil
 }
 
-func ValidateJWT(tokenString string) (uuid.UUID, error) {
+func ValidateToken(tokenString string) (uuid.UUID, error) {
 	claims := &Auth52Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != jwt.SigningMethodHS256 {
