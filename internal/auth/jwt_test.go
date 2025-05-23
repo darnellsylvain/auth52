@@ -19,7 +19,7 @@ func TestCreateToken_ValidToken(t *testing.T) {
 	// ttl := time.Minute
 
 	// Generate a token
-	tokenString, err := CreateToken(userID, email)
+	tokenString, _, err := CreateToken(userID, email)
 	assert.NoError(err, "CreateToken should not return an error")
 	assert.NotEmpty(tokenString, "CreateToken should return a non-empty token")
 
@@ -48,7 +48,7 @@ func TestValidateToken_Success(t *testing.T) {
 	email := "bob@example.com"
 
 	// Create a valid token
-	tokenString, err := CreateToken(userID, email)
+	tokenString, _, err := CreateToken(userID, email)
 	assert.NoError(err)
 	assert.NotEmpty(tokenString)
 

@@ -12,8 +12,8 @@ import (
 )
 
 var (
-    ErrNoAuthHeader  = errors.New("authorization header missing or empty")
-    ErrBadAuthHeader = errors.New("authorization header format must be 'Bearer <token>'")
+	ErrNoAuthHeader  = errors.New("authorization header missing or empty")
+	ErrBadAuthHeader = errors.New("authorization header format must be 'Bearer <token>'")
 )
 
 func HashPassword(plaintextPassword string) ([]byte, error) {
@@ -38,8 +38,7 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return parts[1], nil
 }
 
-
-func MakeRefreshToken() (string, error) {	
+func MakeRefreshToken() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("failed to generate refresh token: %w", err)

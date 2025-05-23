@@ -45,3 +45,7 @@ migrate-down-to:
 .PHONY: migrate-status
 migrate-status:
 	$(MIGRATE) -e GOOSE_COMMAND=status migrate
+
+.PHONY: sqlc-generate
+sqlc-generate:
+	sqlc generate

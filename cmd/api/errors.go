@@ -5,15 +5,15 @@ import (
 )
 
 type HttpError struct {
-	Status		int
-	Message		string
-	Errors		map[string]string
+	Status  int
+	Message string
+	Errors  map[string]string
 }
 
 func (api *API) logError(r *http.Request, err error) {
 	var (
 		method = r.Method
-		uri = r.URL.RequestURI()
+		uri    = r.URL.RequestURI()
 	)
 
 	api.logger.Error(err.Error(), "method", method, "uri", uri)

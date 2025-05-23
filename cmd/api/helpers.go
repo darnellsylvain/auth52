@@ -2,11 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
+	"net/netip"
+	"strings"
 )
 
 type envelope map[string]any
-
 
 func sendJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
@@ -20,11 +22,10 @@ func sendJSON(w http.ResponseWriter, status int, data any, headers http.Header) 
 		w.Header()[key] = value
 	}
 
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(js)
-	
+
 	return nil
 }
 
@@ -36,10 +37,32 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	decoder.DisallowUnknownFields()
 
 	err := decoder.Decode(data)
-	if err != nil {	
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
+func GetIPAddressFromRequest(r *http.Request) *netip.Addr {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
+	}
+	if ip == "" {
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			ip = r.RemoteAddr
+		} else {
+			ip = host
+		}
+	} else {
+		ip = strings.TrimSpace(strings.Split(ip, ",")[0])
+	}
+
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return nil
+	}
+	return &addr
+}

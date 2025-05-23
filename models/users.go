@@ -10,13 +10,13 @@ import (
 )
 
 type User struct {
-	ID        			uuid.UUID `json:"-"`
-	CreatedAt 			time.Time `json:"created_at"`
-	Name				*string	  `json:"name"`
-	Email     			string    `json:"email"`
-	EncryptedPassword  	[]byte 	  `json:"-"`
-	Activated 			bool      `json:"-"`
-	Provider  			string    `json:"-"`
+	ID                uuid.UUID `json:"-"`
+	CreatedAt         time.Time `json:"created_at"`
+	Name              *string   `json:"name"`
+	Email             string    `json:"email"`
+	EncryptedPassword []byte    `json:"-"`
+	Activated         bool      `json:"-"`
+	Provider          string    `json:"-"`
 }
 
 func NewUser(email, password string) (*User, error) {
@@ -28,11 +28,11 @@ func NewUser(email, password string) (*User, error) {
 	}
 
 	user := &User{
-		ID: 	id,
-		Email: 	email,
-		CreatedAt: time.Now(),
+		ID:                id,
+		Email:             email,
+		CreatedAt:         time.Now(),
 		EncryptedPassword: pw,
-		Provider: "email",
+		Provider:          "email",
 	}
 
 	return user, nil
@@ -49,12 +49,12 @@ func (user *User) Authenticate(password string) bool {
 
 func FromDBUser(u database.FindUserByEmailRow) *User {
 	return &User{
-		ID:                	u.ID,
-		CreatedAt:			u.CreatedAt.Time,
-		Name:              	u.Name,
-		Email:             	u.Email,
-		EncryptedPassword: 	u.EncryptedPassword,
-		Activated:         	u.Activated,
-		Provider:         	u.Provider,
+		ID:                u.ID,
+		CreatedAt:         u.CreatedAt,
+		Name:              u.Name,
+		Email:             u.Email,
+		EncryptedPassword: u.EncryptedPassword,
+		Activated:         u.Activated,
+		Provider:          u.Provider,
 	}
 }

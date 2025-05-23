@@ -4,7 +4,6 @@ import (
 	validator "github.com/darnellsylvain/auth52/internal/validator"
 )
 
-
 func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(email != "", "email", "must be provided")
 	v.Check(v.Matches(email, validator.EmailRX), "email", "must be a valid email")
