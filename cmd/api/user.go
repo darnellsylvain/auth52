@@ -9,8 +9,7 @@ import (
 )
 
 func (api *API) GetUser(w http.ResponseWriter, r *http.Request) {
-
-	claims, ok := auth.GetClaims(r.Context()) // Access user modela and find user by the ID
+	claims, ok := auth.GetClaims(r.Context())
 	if !ok {
 		api.unauthorizedResponse(w, r, errors.New("unauthorized"))
 		return
