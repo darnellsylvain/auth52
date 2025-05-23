@@ -1,6 +1,6 @@
 # DEVELOPMENT
 
-MIGRATE=docker compose run --rm migrate goose
+MIGRATE=docker compose run --rm
 
 
 # Create a new migration
@@ -30,8 +30,18 @@ docker-db-shell:
 
 .PHONY: migrate-up
 migrate-up:
-	$(MIGRATE) up
+	$(MIGRATE) -e GOOSE_COMMAND=up migrate
 
 .PHONY: migrate-down
 migrate-down:
-	$(MIGRATE) down
+	$(MIGRATE) -e GOOSE_COMMAND=down migrate
+
+.PHONY: migrate-down-to
+migrate-down-to:
+	@read -p "Enter version to roll back to: " version; \
+	docker compose run --rm -e GOOSE_COMMAND=down-to -e GOOSE_COMMAND_ARG=$$version migrate
+
+
+.PHONY: migrate-status
+migrate-status:
+	$(MIGRATE) -e GOOSE_COMMAND=status migrate

@@ -28,7 +28,6 @@ var (
 	jwtExpires = time.Hour
 )
 
-
 func CreateToken(userId uuid.UUID, email string) (string, error) {
 	claims := &Auth52Claims{
 		RegisteredClaims: jwt.RegisteredClaims{

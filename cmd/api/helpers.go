@@ -3,11 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"time"
-
-	"github.com/darnellsylvain/auth52/internal/database"
-	"github.com/darnellsylvain/auth52/models"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type envelope map[string]any
@@ -48,22 +43,3 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	return nil
 }
 
-
-func toTimeOrZero(tz pgtype.Timestamptz) time.Time {
-    if tz.Valid {
-        return tz.Time
-    }
-    return time.Time{}
-}
-
-func FromDBUser(u database.FindUserByEmailRow) *models.User {
-	return &models.User{
-		ID:                	u.ID,
-		CreatedAt:			toTimeOrZero(u.CreatedAt),
-		Name:              	u.Name,
-		Email:             	u.Email,
-		EncryptedPassword: 	u.EncryptedPassword,
-		Activated:         	u.Activated,
-		Provider:         	u.Provider,
-	}
-}
