@@ -21,7 +21,6 @@ type LoginParams struct {
 type LoginResponse struct {
 	User              *models.User `json:"user"`
 	AccessToken       string       `json:"accessToken"`
-	RefreshToken      string       `json:"refreshToken"`
 	AccessTokenExpiry time.Time    `json:"accessTokenExpiry"`
 }
 
@@ -86,7 +85,6 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	response := &LoginResponse{
 		User:              user,
 		AccessToken:       accessToken,
-		RefreshToken:      refreshToken,
 		AccessTokenExpiry: accesssClaims.ExpiresAt.Time,
 	}
 
