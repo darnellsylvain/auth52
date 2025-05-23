@@ -7,17 +7,16 @@ import (
 )
 
 type Config struct {
-    Port            string           `env:"PORT" envDefault:"8080"`
-    DBURL           string           `env:"AUTH52_DB_URL,required"`
-    JWTSecret       string           `env:"AUTH52_JWT_SECRET,required"`
-    JWTExpiry       time.Duration    `env:"JWT_EXPIRY" envDefault:"1h"`
-    SessionExpiry   time.Duration       `env:"SESSION_EXPIRY" envDefault:"30d"`
+	Port      string        `env:"PORT" envDefault:"8080"`
+	DBURL     string        `env:"AUTH52_DB_URL,required"`
+	JWTSecret string        `env:"AUTH52_JWT_SECRET,required"`
+	JWTExpiry time.Duration `env:"JWT_EXPIRY" envDefault:"1h"`
 }
 
 func Load() (*Config, error) {
-    cfg := &Config{}
-    if err := env.Parse(cfg); err != nil {
-        return nil, err
-    }
-    return cfg, nil
+	cfg := &Config{}
+	if err := env.Parse(cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
