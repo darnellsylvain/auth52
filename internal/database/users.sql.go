@@ -7,9 +7,9 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -28,7 +28,7 @@ type CreateUserParams struct {
 
 type CreateUserRow struct {
 	ID        uuid.UUID
-	CreatedAt pgtype.Timestamptz
+	CreatedAt time.Time
 	Version   int32
 }
 
@@ -86,7 +86,7 @@ WHERE email = $1
 
 type FindUserByEmailRow struct {
 	ID                uuid.UUID
-	CreatedAt         pgtype.Timestamptz
+	CreatedAt         time.Time
 	Name              *string
 	Email             string
 	EncryptedPassword []byte

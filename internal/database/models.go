@@ -5,13 +5,28 @@
 package database
 
 import (
+	"net/netip"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Session struct {
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	RefreshToken string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	ExpiresAt    time.Time
+	RevokedAt    pgtype.Timestamptz
+	IpAddress    *netip.Addr
+	UserAgent    *string
+}
+
 type User struct {
 	ID                uuid.UUID
-	CreatedAt         pgtype.Timestamptz
+	CreatedAt         time.Time
 	Name              *string
 	Email             string
 	EncryptedPassword []byte
