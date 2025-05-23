@@ -59,7 +59,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, accesssClaims, err := auth.CreateToken(user.ID, user.Email)
+	accessToken, accessClaims, err := auth.CreateToken(user.ID, user.Email)
 	if err != nil {
 		api.serverErrorResponse(w, r, err)
 	}
@@ -85,7 +85,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	response := &LoginResponse{
 		User:              user,
 		AccessToken:       accessToken,
-		AccessTokenExpiry: accesssClaims.ExpiresAt.Time,
+		AccessTokenExpiry: accessClaims.ExpiresAt.Time,
 	}
 
 	sendJSON(w, http.StatusOK, response, nil)
