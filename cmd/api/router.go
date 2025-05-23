@@ -6,20 +6,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Router struct {
-	mux *mux.Router
-}
+func (api *API) NewRouter() *mux.Router {
+	r := mux.NewRouter().StrictSlash(true)
 
-func NewRouter() *Router {
-	return &Router{
-		mux: mux.NewRouter().StrictSlash(true),
-	}
-}
+	r.HandleFunc("/healthcheck", api.HealthCheck).Methods("GET")
+	r.HandleFunc("/signup", api.Signup).Methods("POST")
+	r.HandleFunc("/login", api.Login).Methods("GET")
 
-func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.mux.ServeHTTP(w, req)
-}
+	userRouter := r.PathPrefix("/user").Subrouter()
+	userRouter.Use(api.RequireAuthorization)
+	userRouter.HandleFunc("", api.GetUser).Methods("GET")
 
+	return r
+
+}
 
 type apiHandler func(w http.ResponseWriter, r *http.Request) error
 

@@ -17,24 +17,22 @@ import (
 )
 
 type API struct {
-	handler 	http.Handler
-	db 			*storage.Connection
-	queries		*database.Queries
-	version 	string
-	logger 		*slog.Logger
-	jwtSecret 	string
-
+	handler   http.Handler
+	db        *storage.Connection
+	queries   *database.Queries
+	version   string
+	logger    *slog.Logger
+	jwtSecret string
 }
 
-
 func NewAPI() *API {
-    cfg, err := config.Load()
-    if err != nil {
-        log.Fatalf("config load: %v", err)
-    }
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("config load: %v", err)
+	}
 
 	api := &API{
-		version: "1",
+		version:   "1",
 		jwtSecret: cfg.JWTSecret,
 	}
 
@@ -51,31 +49,25 @@ func NewAPI() *API {
 	api.queries = database.New(db)
 
 	// Initiallize Router
-	router := NewRouter().mux
-	router.HandleFunc("/healthcheck", api.HealthCheck)
-	router.HandleFunc("/user", api.GetUser)
-	router.HandleFunc("/signup", api.Signup).Methods("POST")
-	router.HandleFunc("/login", api.Login).Methods("GET")
-
-	api.handler = router
+	api.handler = api.NewRouter()
 
 	return api
 }
 
 func (api *API) ListenAndServe() {
 	server := &http.Server{
-		Addr: ":8080",
-		Handler: api.RecoverPanic(api.handler),
-		ReadTimeout: 5 * time.Second,
+		Addr:         ":8080",
+		Handler:      api.RecoverPanic(api.handler),
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		IdleTimeout: time.Minute,
+		IdleTimeout:  time.Minute,
 	}
 
 	done := make(chan struct{})
 
 	go func() {
 		waitForTermination(api.logger, done)
-		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		api.Shutdown(ctx)
 		server.Shutdown(ctx)
@@ -90,10 +82,10 @@ func (api *API) ListenAndServe() {
 func waitForTermination(log *slog.Logger, done <-chan struct{}) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	signal := <-sigChan
 	log.Info("Received shutdown signal", "signal", signal.String())
-	
+
 	<-done
 	log.Info("Shutting down...")
 }
@@ -105,7 +97,6 @@ func (api *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		"description": "Auth 52 is a user registration and authentication API",
 	}, nil)
 }
-
 
 func (api *API) Shutdown(ctx context.Context) {
 	if api.db != nil {

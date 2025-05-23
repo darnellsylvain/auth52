@@ -43,3 +43,7 @@ func (api *API) serverErrorResponse(w http.ResponseWriter, r *http.Request, err 
 func (api *API) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
 	api.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
+
+func (api *API) unauthorizedResponse(w http.ResponseWriter, r *http.Request, err error) {
+	api.errorResponse(w, r, http.StatusUnauthorized, err.Error())
+}

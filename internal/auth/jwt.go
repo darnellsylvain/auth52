@@ -49,7 +49,7 @@ func CreateToken(userId uuid.UUID, email string) (string, *Auth52Claims, error) 
 	return signedString, claims, nil
 }
 
-func ValidateToken(tokenString string) (uuid.UUID, error) {
+func ValidateToken(tokenString string) (*Auth52Claims, error) {
 	claims := &Auth52Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != jwt.SigningMethodHS256 {
@@ -59,32 +59,32 @@ func ValidateToken(tokenString string) (uuid.UUID, error) {
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return uuid.Nil, fmt.Errorf("token expired: %w", err)
+			return nil, fmt.Errorf("token expired: %w", err)
 		}
-		return uuid.Nil, fmt.Errorf("invalid token: %w", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	userIDString, err := token.Claims.GetSubject()
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	issuer, err := token.Claims.GetIssuer()
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 	if issuer != string(TokenIssuer) {
-		return uuid.Nil, errors.New("invalid issuer")
+		return nil, errors.New("invalid issuer")
 	}
 
 	if !token.Valid {
-		return uuid.Nil, errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	// parse the user ID out of the claim
-	userID, err := uuid.Parse(userIDString)
+	_, err = uuid.Parse(userIDString)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid user id in token: %w", err)
+		return nil, fmt.Errorf("invalid user id in token: %w", err)
 	}
-	return userID, nil
+	return claims, nil
 }
