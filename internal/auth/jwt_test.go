@@ -19,9 +19,10 @@ func TestCreateToken_ValidToken(t *testing.T) {
 	// ttl := time.Minute
 
 	// Generate a token
-	tokenString, _, err := CreateToken(userID, email)
+	tokenString, accessTokenClaims, err := CreateToken(userID, email)
 	assert.NoError(err, "CreateToken should not return an error")
 	assert.NotEmpty(tokenString, "CreateToken should return a non-empty token")
+	assert.NotEmpty(accessTokenClaims, "Claims should return an non-empty struct")
 
 	// Parse it to inspect claims
 	claims := &Auth52Claims{}
@@ -37,6 +38,7 @@ func TestCreateToken_ValidToken(t *testing.T) {
 	assert.Equal("Auth52", claims.Issuer, "Issuer claim mismatch")
 
 	now := time.Now()
+
 	assert.WithinDuration(now, claims.IssuedAt.Time, time.Second, "IssuedAt should be ~now")
 	assert.WithinDuration(now.Add(time.Hour), claims.ExpiresAt.Time, time.Second, "ExpiresAt should be ~now+ttl")
 }
@@ -53,9 +55,12 @@ func TestValidateToken_Success(t *testing.T) {
 	assert.NotEmpty(tokenString)
 
 	// Validate it
-	returnedID, err := ValidateToken(tokenString)
+	claims, err := ValidateToken(tokenString)
 	assert.NoError(err, "ValidateToken should not return an error for a valid token")
-	assert.Equal(userID, returnedID, "ValidateToken should return the original user ID")
+	parsedId, err := uuid.Parse(claims.UserId)
+	assert.NoError(err, "Claims.UserId should be successfully parsed")
+
+	assert.Equal(userID, parsedId, "ValidateToken should return the original user ID")
 }
 
 // func TestValidateToken_Expired(t *testing.T) {
