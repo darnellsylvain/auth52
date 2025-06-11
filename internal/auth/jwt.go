@@ -24,7 +24,7 @@ const (
 
 var (
 	jwtSecret  = []byte(os.Getenv("AUTH52_JWT_SECRET"))
-	jwtExpires = time.Second
+	jwtExpires = time.Hour
 )
 
 func CreateToken(userId uuid.UUID, email string) (string, *Auth52Claims, error) {
