@@ -10,11 +10,12 @@ func (api *API) NewRouter() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 	version := api.version
 
-	apiRouter := r.PathPrefix("/api/v" + version).Subrouter()
+	apiRouter := r.PathPrefix("/api/" + version).Subrouter()
 
 	apiRouter.HandleFunc("/healthcheck", api.HealthCheck).Methods("GET")
 	apiRouter.HandleFunc("/signup", api.Signup).Methods("POST")
 	apiRouter.HandleFunc("/login", api.Login).Methods("GET")
+	apiRouter.HandleFunc("/logout", api.Logout).Methods("POST")
 	apiRouter.HandleFunc("/refresh", api.Refresh).Methods("POST")
 
 	userRouter := apiRouter.PathPrefix("/user").Subrouter()

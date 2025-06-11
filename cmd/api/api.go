@@ -32,7 +32,7 @@ func NewAPI() *API {
 	}
 
 	api := &API{
-		version:   "1",
+		version:   "v1",
 		jwtSecret: cfg.JWTSecret,
 	}
 

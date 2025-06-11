@@ -24,7 +24,7 @@ const (
 
 var (
 	jwtSecret  = []byte(os.Getenv("AUTH52_JWT_SECRET"))
-	jwtExpires = time.Hour
+	jwtExpires = time.Second
 )
 
 func CreateToken(userId uuid.UUID, email string) (string, *Auth52Claims, error) {
@@ -59,9 +59,10 @@ func ValidateToken(tokenString string) (*Auth52Claims, error) {
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, fmt.Errorf("token expired: %w", err)
+			return nil, errors.New(err.Error())
+
 		}
-		return nil, fmt.Errorf("invalid token: %w", err)
+		return nil, errors.New(err.Error())
 	}
 
 	userIDString, err := token.Claims.GetSubject()

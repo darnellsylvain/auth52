@@ -24,6 +24,7 @@ func (api *API) Refresh(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		api.badRequestError(w, r, err)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
