@@ -26,7 +26,6 @@ func HashPassword(plaintextPassword string) ([]byte, error) {
 
 func GetBearerToken(headers http.Header) (string, error) {
 	auth := headers.Get("Authorization")
-	fmt.Println(auth)
 	if auth == "" {
 		return "", ErrNoAuthHeader
 	}
