@@ -8,12 +8,16 @@ import (
 
 func (api *API) NewRouter() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
+	version := api.version
 
-	r.HandleFunc("/healthcheck", api.HealthCheck).Methods("GET")
-	r.HandleFunc("/signup", api.Signup).Methods("POST")
-	r.HandleFunc("/login", api.Login).Methods("GET")
+	apiRouter := r.PathPrefix("/api/v" + version).Subrouter()
 
-	userRouter := r.PathPrefix("/user").Subrouter()
+	apiRouter.HandleFunc("/healthcheck", api.HealthCheck).Methods("GET")
+	apiRouter.HandleFunc("/signup", api.Signup).Methods("POST")
+	apiRouter.HandleFunc("/login", api.Login).Methods("GET")
+	apiRouter.HandleFunc("/refresh", api.Refresh).Methods("POST")
+
+	userRouter := apiRouter.PathPrefix("/user").Subrouter()
 	userRouter.Use(api.RequireAuthorization)
 	userRouter.HandleFunc("", api.GetUser).Methods("GET")
 

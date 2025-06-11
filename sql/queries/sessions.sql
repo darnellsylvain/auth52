@@ -25,3 +25,11 @@ SELECT * FROM sessions
 WHERE refresh_token = $1
   AND revoked_at IS NULL
   AND expires_at > now();
+
+-- name: GetUserByValidSession :one
+SELECT u.id AS user_id, u.email
+FROM sessions s
+JOIN users u ON s.user_id = u.id
+WHERE s.refresh_token = $1
+  AND revoked_at IS NULL
+  AND s.expires_at > now();

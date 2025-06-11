@@ -69,6 +69,26 @@ func (q *Queries) FindValidSessionByToken(ctx context.Context, refreshToken stri
 	return i, err
 }
 
+const getUserByValidSession = `-- name: GetUserByValidSession :one
+SELECT u.id AS user_id, u.email
+FROM sessions s
+JOIN users u ON s.user_id = u.id
+WHERE s.refresh_token = $1
+  AND s.expires_at > now()
+`
+
+type GetUserByValidSessionRow struct {
+	UserID uuid.UUID
+	Email  string
+}
+
+func (q *Queries) GetUserByValidSession(ctx context.Context, refreshToken string) (GetUserByValidSessionRow, error) {
+	row := q.db.QueryRow(ctx, getUserByValidSession, refreshToken)
+	var i GetUserByValidSessionRow
+	err := row.Scan(&i.UserID, &i.Email)
+	return i, err
+}
+
 const revokeSessionByToken = `-- name: RevokeSessionByToken :exec
 UPDATE sessions
 SET revoked_at = now(),
