@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,12 +18,15 @@ import (
 )
 
 type API struct {
-	handler   http.Handler
-	db        *storage.Connection
-	queries   *database.Queries
-	version   string
-	logger    *slog.Logger
-	jwtSecret string
+	handler            http.Handler
+	db                 *storage.Connection
+	queries            *database.Queries
+	version            string
+	logger             *slog.Logger
+	jwtSecret          string
+	config             *config.Config
+	rateLimiterClients map[string]*rateLimiterClient
+	rateLimiterMu      sync.Mutex
 }
 
 func NewAPI() *API {
@@ -32,8 +36,10 @@ func NewAPI() *API {
 	}
 
 	api := &API{
-		version:   "v1",
-		jwtSecret: cfg.JWTSecret,
+		version:            "v1",
+		jwtSecret:          cfg.JWTSecret,
+		config:             cfg,
+		rateLimiterClients: make(map[string]*rateLimiterClient),
 	}
 
 	l := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -57,7 +63,7 @@ func NewAPI() *API {
 func (api *API) ListenAndServe() {
 	server := &http.Server{
 		Addr:         ":8080",
-		Handler:      api.RecoverPanic(api.handler),
+		Handler:      api.handler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  time.Minute,

@@ -47,3 +47,8 @@ func (api *API) failedValidationResponse(w http.ResponseWriter, r *http.Request,
 func (api *API) unauthorizedResponse(w http.ResponseWriter, r *http.Request, err error) {
 	api.errorResponse(w, r, http.StatusUnauthorized, err.Error())
 }
+
+func (api *API) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	message := "rate limit exceeded"
+	api.errorResponse(w, r, http.StatusTooManyRequests, message)
+}

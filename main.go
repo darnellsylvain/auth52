@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	godotenv.Load(".env")
 	api := api.NewAPI()
 	api.ListenAndServe()
 }
